@@ -6,27 +6,53 @@ export class Cell extends Phaser.GameObjects.Container {
 
     this._col = col;
     this._row = row;
-    this._isEmpty = true;
+    this._ball = null;
 
     this._buildBg();
+    this._addListeners();
   }
 
   get row() {
     return this._row;
   }
+
   get col() {
     return this._col;
   }
+
+  get ball() {
+    return this._ball;
+  }
+
   get isEmpty() {
-    return this._isEmpty;
+    return !this._ball;
+  }
+
+  addBall(ball) {
+    this.add(ball);
+    this._ball = ball;
+  }
+
+  removeBall() {
+    this.remove(this._ball);
+    return this._ball;
   }
 
   _buildBg() {
     const bg = this.scene.add.image(0, 0, TEXTURE, "box-bg.png");
-    this.add(bg);
+    this.add((this._bg = bg));
 
     const { displayWidth, displayHeight } = bg;
     this.width = displayWidth;
     this.height = displayHeight;
+  }
+
+  _addListeners() {
+    this._bg.setInteractive();
+    this._bg.on("pointerup", this._onPointerUp, this);
+  }
+
+  _onPointerUp() {
+    this.emit("onCellClick", this._col, this._row);
   }
 }
