@@ -14,7 +14,7 @@ export class Board extends Phaser.GameObjects.Container {
   getCellByBall(ball) {
     for (let i = 0; i < this._cells.length; i++) {
       const cols = this._cells[i];
-      for (let j = 0; j < this._cells.length; j++) {
+      for (let j = 0; j < cols.length; j++) {
         const cell = cols[j];
         if (cell.ball === ball) {
           return cell;
@@ -64,17 +64,52 @@ export class Board extends Phaser.GameObjects.Container {
     return ball;
   }
 
+  _checkForCombination() {
+    for (let i = 0; i < this._cells.length; i++) {
+      const cols = this._cells[i];
+      for (let j = 0; j < cols.length; j++) {
+        const cell = cols[j];
+        if (!cell.isEmpty) {
+          const combination = this._checkHorizontalCombination(
+            cell.ball,
+            i,
+            j,
+            []
+          );
+        }
+      }
+    }
+  }
+
+  _checkHorizontalCombination(ball, col, row, combination) {
+    if (col + 1 >= this._cells.length) {
+      return combination;
+    }
+    const cell = this._cells[col + 1][row];
+    if (!cell.ball || cell.ball.type !== ball.type) {
+      return combination;
+    }
+    combination.push(ball);
+    return this._checkHorizontalCombination(ball, col + 1, row, combination);
+  }
+
+  _moveBall(newCell) {
+    const prevCell = this.getCellByBall(this._selectedBall);
+    prevCell.removeBall();
+    newCell.addBall(this._selectedBall);
+    this._selectedBall.deselectBall();
+    this._selectedBall = null;
+    this._checkForCombination();
+    this._makeRandomBalls();
+    this._checkForCombination();
+  }
+
   _onCellClicked(col, row) {
     const cell = this._cells[col][row];
     const { isEmpty } = cell;
     if (isEmpty) {
       if (this._selectedBall) {
-        const prevCell = this.getCellByBall(this._selectedBall);
-        prevCell.removeBall();
-        cell.addBall(this._selectedBall);
-        this._selectedBall.deselectBall();
-        this._selectedBall = null;
-        this._makeRandomBalls();
+        this._moveBall(cell);
       }
     } else {
       if (this._selectedBall) {
