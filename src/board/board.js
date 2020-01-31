@@ -13,7 +13,8 @@ export class Board extends Phaser.GameObjects.Container {
     this._selectedBall = null;
 
     this._buildBoard();
-    this._makeBalls();
+    this.scene.events.on(EVENTS.BALLS_READY, this._onBallsReady, this);
+    this.scene.events.on(EVENTS.UI_VIEW_READY, this._onUiReady, this);
   }
 
   getRandomEmptyCell() {
@@ -40,6 +41,13 @@ export class Board extends Phaser.GameObjects.Container {
     }
   }
 
+  _onBallsReady(ballsType) {
+    this._newBalls = ballsType;
+  }
+  _onUiReady() {
+    this._makeBalls();
+  }
+
   _buildBoard() {
     for (let col = 0; col < BOARD_DIMENSIONS.width; col++) {
       const column = [];
@@ -59,19 +67,16 @@ export class Board extends Phaser.GameObjects.Container {
 
   _makeBalls() {
     const emptyCells = this._getEmptyCells();
-    for (let i = 0; i < Math.min(3, emptyCells.length); i++) {
-      const ball = this._generateRandomBall();
+    for (
+      let i = 0;
+      i < Math.min(this._newBalls.length, emptyCells.length);
+      i++
+    ) {
+      const ball = new Ball(this.scene, this._newBalls[i]);
       const cell = this.getRandomEmptyCell();
-
       cell.addBall(ball);
     }
-  }
-
-  _generateRandomBall() {
-    const type = Math.floor(Math.random() * 4 + 1);
-    const ball = new Ball(this.scene, type);
-
-    return ball;
+    this.scene.events.emit(EVENTS.BALLS_CREATED);
   }
 
   _onCellClicked(col, row) {

@@ -7,13 +7,17 @@ export class UI extends Phaser.GameObjects.Container {
   constructor(scene) {
     super(scene);
     this._build();
+    this.scene.events.on(EVENTS.BALLS_CREATED, this._onBallsCreated, this);
     this.scene.events.on(
       EVENTS.COMBINATION_COLLECTED,
       this._onCombinationCollected,
       this
     );
+    this.scene.events.emit(EVENTS.UI_VIEW_READY);
   }
-
+  _onBallsCreated() {
+    this._nextBalls.updateBalls();
+  }
   _onCombinationCollected(score) {
     this._scores.updateScore(this._scores.score + score);
   }
